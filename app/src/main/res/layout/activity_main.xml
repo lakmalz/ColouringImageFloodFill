@@ -17,6 +17,7 @@
         android:layout_gravity="center"
         android:layout_width="216dp"
         android:visibility="visible"
+        android:background="#b1f9b276"
         android:text="Select color"
         android:layout_height="48dp"/>
 </LinearLayout>

@@ -32,7 +32,9 @@ public class ColorActivity extends BaseActivity {
         System.loadLibrary("jnibitmap");
     }
 
+    public native void constructor();
     public static native void floodFill(Bitmap bitmap, int x, int y, int fillColor, int targetColor, int tolerance);
+    public static native void redo();
 
     @Override
     protected int getLayoutId() {
@@ -42,15 +44,12 @@ public class ColorActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-        ButterKnife.bind(this);
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inScaled = false;
         originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.four, o);
         ivImage.setImageBitmap(originalBitmap);
         currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-
+        constructor();
         ivImage.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

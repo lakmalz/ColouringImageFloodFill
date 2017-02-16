@@ -18,6 +18,10 @@
  std::queue<uint32_t> queueFillColor ;
 
 extern "C" {
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_constructor(JNIEnv *env);
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env);
+
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_floodFill(JNIEnv *env,
                                                                                jobject obj,
                                                                                jobject handle,
@@ -26,6 +30,7 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_fl
                                                                                uint32_t fillColor,
                                                                                uint32_t targetColor,
                                                                                uint32_t tolerance);
+void clear( std::queue<uint32_t> &q );
 
 bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance);
 
@@ -38,6 +43,22 @@ void floodFill(JNIEnv *env,
                void *bitmapPixels,
                AndroidBitmapInfo *bitmapInfo,
                uint32_t tolerance);
+
+}
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_constructor(JNIEnv *env) {
+    clear(pixelsAllX);
+    clear(pixelsAllY);
+    clear(queueFillColor);
+}
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env){
+
+}
+
+void clear( std::queue<uint32_t> &q ) {
+    std::queue<uint32_t> empty;
+    std::swap( q, empty );
 }
 
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_floodFill(JNIEnv *env,
@@ -108,7 +129,6 @@ bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance
          }
     }
 }
-
 
 void floodFill(JNIEnv *env,
                uint32_t x,
