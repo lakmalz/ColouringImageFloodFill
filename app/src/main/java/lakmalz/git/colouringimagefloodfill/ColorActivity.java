@@ -3,11 +3,11 @@ package lakmalz.git.colouringimagefloodfill;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,14 +16,13 @@ import org.xdty.preference.colorpicker.ColorPickerDialog;
 import org.xdty.preference.colorpicker.ColorPickerSwatch;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class ColorActivity extends BaseActivity {
     @BindView(R.id.ivImage)
     TouchImageView ivImage;
 
-    private int mSelectedColor;
+    private int mSelectedColor = Color.RED;
     private Bitmap currentBitmap;
     private Bitmap originalBitmap;
     private int currentX, currentY, currentTolerance = 40;
@@ -33,7 +32,9 @@ public class ColorActivity extends BaseActivity {
     }
 
     public native void constructor();
+
     public static native void floodFill(Bitmap bitmap, int x, int y, int fillColor, int targetColor, int tolerance);
+
     public static native void redo();
 
     @Override
@@ -55,13 +56,13 @@ public class ColorActivity extends BaseActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        currentX = (int) event.getX()/4 ;
-                        currentY = (int) event.getY()/4;
+                        currentX = (int) event.getX();
+                        currentY = (int) event.getY();
                         //--------------------------
 
                         //--------------------------
 
-                        BitmapDrawable drawable = (BitmapDrawable) ((TouchImageView)v).getDrawable();
+                        BitmapDrawable drawable = (BitmapDrawable) ((TouchImageView) v).getDrawable();
                         Rect imageBounds = new Rect();
                         ivImage.getDrawingRect(imageBounds);
                         // original height and width of the bitmap
@@ -95,7 +96,34 @@ public class ColorActivity extends BaseActivity {
                         //--------------------------
                         Log.e("cxz", "xxx" + currentX + " " + currentY + " " + originalBitmap.getWidth() + " " + originalBitmap.getHeight());
                         currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-                        floodFill(currentBitmap, currentX, currentY, mSelectedColor/*Color.YELLOW*/, Color.BLACK, 50);
+
+                        //-------------
+                        int bitW = originalBitmap.getWidth();
+                        int bitH = originalBitmap.getHeight();
+                        float px = event.getX();
+                        float py = event.getY();
+                        int h = ivImage.getMeasuredHeight();
+                        int w = ivImage.getMeasuredWidth();
+
+                        float pstx = px / w;
+                        float psty = py / h;
+                        currentX = (int) (bitW * pstx);
+                        currentY = (int) (bitH * psty);
+                        //---------------
+                        /*Matrix m = new Matrix();
+                        ivImage.getMatrix().invert(m);
+                        //float[] pts = {ivImage.getLas.x, mMapImageView.last.y };
+                        float[] pts = {event.getX(), event.getY() };
+                        m.mapPoints(pts);
+                        //Log.d("Mapped to real image: " + pts[0] + ", " + pts[1]);
+                        currentX = (int)pts[0];
+                        currentY = (int)pts[1];*/
+
+
+                        //-------------
+                        currentX = (int)TouchImageView.stPointF.x;
+                        currentY = (int)TouchImageView.stPointF.y;
+                        floodFill(currentBitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
                         ivImage.setImageBitmap(currentBitmap);
                         break;
                 }
@@ -103,6 +131,18 @@ public class ColorActivity extends BaseActivity {
             }
         });
     }
+
+    /*final float[] getPointerCoords(ImageView view, MotionEvent e)
+    {
+        final int index = e.getActionIndex();
+        float[] coords = new float[] { e.getX(index), e.getY(index) };
+        Matrix matrix = new Matrix();
+        view.getImageMatrix().invert(matrix);
+        matrix.postTranslate(view.getScrollX(), view.getScrollY());
+        matrix.mapPoints(coords);
+
+        return coords;
+    }*/
 
     @OnClick(R.id.btn_select_color)
     public void onClickTest() {

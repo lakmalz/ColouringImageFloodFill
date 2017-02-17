@@ -29,8 +29,9 @@ import android.widget.OverScroller;
 import android.widget.Scroller;
 
 public class TouchImageView extends ImageView {
-
+    private static final String TAG = "TouchImageView";
     private static final String DEBUG = "DEBUG";
+    public static PointF stPointF;
 
     //
     // SuperMin and SuperMax multipliers. Determine how much the image can be
@@ -768,7 +769,8 @@ public class TouchImageView extends ImageView {
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             boolean consumed = false;
-            if(doubleTapListener != null) {
+            // TODO: 17/2/17 commented touble tap action
+            /*if(doubleTapListener != null) {
                 consumed = doubleTapListener.onDoubleTap(e);
             }
             if (state == State.NONE) {
@@ -776,7 +778,7 @@ public class TouchImageView extends ImageView {
                 DoubleTapZoom doubleTap = new DoubleTapZoom(targetZoom, e.getX(), e.getY(), false);
                 compatPostOnAnimation(doubleTap);
                 consumed = true;
-            }
+            }*/
             return consumed;
         }
 
@@ -846,6 +848,8 @@ public class TouchImageView extends ImageView {
             // User-defined OnTouchListener
             //
             if(userTouchListener != null) {
+                stPointF = transformCoordBitmapToTouch(event.getX(), event.getY());
+
                 userTouchListener.onTouch(v, event);
             }
 
