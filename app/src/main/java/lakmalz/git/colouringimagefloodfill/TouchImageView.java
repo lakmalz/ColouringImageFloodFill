@@ -28,10 +28,12 @@ import android.widget.ImageView;
 import android.widget.OverScroller;
 import android.widget.Scroller;
 
+import java.util.logging.Logger;
+
 public class TouchImageView extends ImageView {
     private static final String TAG = "TouchImageView";
     private static final String DEBUG = "DEBUG";
-    public static PointF stPointF;
+    public static RectF stPointF;
 
     //
     // SuperMin and SuperMax multipliers. Determine how much the image can be
@@ -214,6 +216,8 @@ public class TouchImageView extends ImageView {
 
         float w = getDrawable().getIntrinsicWidth();
         float h = getDrawable().getIntrinsicHeight();
+        Log.d(TAG,"topLeft : " + topLeft.x + " : " + topLeft.y);
+        Log.d(TAG,"bottomRight : " + bottomRight.x + " : " + bottomRight.y);
         return new RectF(topLeft.x / w, topLeft.y / h, bottomRight.x / w, bottomRight.y / h);
     }
 
@@ -848,7 +852,9 @@ public class TouchImageView extends ImageView {
             // User-defined OnTouchListener
             //
             if(userTouchListener != null) {
-                stPointF = transformCoordBitmapToTouch(event.getX(), event.getY());
+                //stPointF = transformCoordBitmapToTouch(event.getX(), event.getY());
+                //stPointF = getZoomedRect();
+
 
                 userTouchListener.onTouch(v, event);
             }
@@ -1050,7 +1056,7 @@ public class TouchImageView extends ImageView {
      * 			to the bounds of the bitmap size.
      * @return Coordinates of the point touched, in the coordinate system of the original drawable.
      */
-    private PointF transformCoordTouchToBitmap(float x, float y, boolean clipToBitmap) {
+    public PointF transformCoordTouchToBitmap(float x, float y, boolean clipToBitmap) {
         matrix.getValues(m);
         float origW = getDrawable().getIntrinsicWidth();
         float origH = getDrawable().getIntrinsicHeight();

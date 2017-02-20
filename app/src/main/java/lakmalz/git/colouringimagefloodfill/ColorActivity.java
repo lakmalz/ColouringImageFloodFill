@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -58,71 +59,11 @@ public class ColorActivity extends BaseActivity {
                     case MotionEvent.ACTION_DOWN:
                         currentX = (int) event.getX();
                         currentY = (int) event.getY();
-                        //--------------------------
 
-                        //--------------------------
+                        PointF point = ivImage.transformCoordTouchToBitmap(event.getX(), event.getY(), true);
+                        currentX = (int)point.x/4;
+                        currentY = (int)point.y/4;
 
-                        BitmapDrawable drawable = (BitmapDrawable) ((TouchImageView) v).getDrawable();
-                        Rect imageBounds = new Rect();
-                        ivImage.getDrawingRect(imageBounds);
-                        // original height and width of the bitmap
-                        int intrinsicHeight = drawable.getIntrinsicHeight();
-                        int intrinsicWidth = drawable.getIntrinsicWidth();
-
-                        // height and width of the visible (scaled) image
-                        int scaledHeight = imageBounds.height();
-                        int scaledWidth = imageBounds.width();
-
-                        // Find the ratio of the original image to the scaled image
-                        // Should normally be equal unless a disproportionate scaling
-                        // (e.g. fitXY) is used.
-                        float heightRatio = (float) intrinsicHeight / scaledHeight;
-                        float widthRatio = (float) intrinsicWidth / scaledWidth;
-
-                        // do whatever magic to get your touch point
-                        // MotionEvent event;
-
-                        // get the distance from the left and top of the image bounds
-                        float scaledImageOffsetX = event.getX() - imageBounds.left;
-                        float scaledImageOffsetY = event.getY() - imageBounds.top;
-
-                        // scale these distances according to the ratio of your scaling
-                        // For example, if the original image is 1.5x the size of the scaled
-                        // image, and your offset is (10, 20), your original image offset
-                        // values should be (15, 30).
-                        int originalImageOffsetX = Math.round(scaledImageOffsetX * widthRatio);
-                        int originalImageOffsetY = Math.round(scaledImageOffsetY * heightRatio);
-
-                        //--------------------------
-                        Log.e("cxz", "xxx" + currentX + " " + currentY + " " + originalBitmap.getWidth() + " " + originalBitmap.getHeight());
-                        currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-
-                        //-------------
-                        int bitW = originalBitmap.getWidth();
-                        int bitH = originalBitmap.getHeight();
-                        float px = event.getX();
-                        float py = event.getY();
-                        int h = ivImage.getMeasuredHeight();
-                        int w = ivImage.getMeasuredWidth();
-
-                        float pstx = px / w;
-                        float psty = py / h;
-                        currentX = (int) (bitW * pstx);
-                        currentY = (int) (bitH * psty);
-                        //---------------
-                        /*Matrix m = new Matrix();
-                        ivImage.getMatrix().invert(m);
-                        //float[] pts = {ivImage.getLas.x, mMapImageView.last.y };
-                        float[] pts = {event.getX(), event.getY() };
-                        m.mapPoints(pts);
-                        //Log.d("Mapped to real image: " + pts[0] + ", " + pts[1]);
-                        currentX = (int)pts[0];
-                        currentY = (int)pts[1];*/
-
-
-                        //-------------
-                        currentX = (int)TouchImageView.stPointF.x;
-                        currentY = (int)TouchImageView.stPointF.y;
                         floodFill(currentBitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
                         ivImage.setImageBitmap(currentBitmap);
                         break;
