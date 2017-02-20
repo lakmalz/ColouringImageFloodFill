@@ -22,7 +22,7 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_re
 
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_floodFill(JNIEnv *env,
                                                                                jobject obj,
-                                                                               jobject handle,
+                                                                               jobject bitmap,
                                                                                uint32_t x,
                                                                                uint32_t y,
                                                                                uint32_t fillColor,
@@ -51,6 +51,15 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_co
 }
 
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env) {
+    if(!pixelsAllX.empty()) {
+        pixelsAllX.pop();
+    }
+    if(!pixelsAllY.empty()) {
+        pixelsAllY.pop();
+    }
+    if(!queueFillColor.empty()) {
+        queueFillColor.pop();
+    }
 
 }
 
@@ -160,7 +169,7 @@ void floodFill(JNIEnv *env,
     int blue = 0;
     int green = 0;
     int alpha = 0;
-    oldColor = pixels[y * bitmapInfo->width + x];//4294967295 // targetColor -4278190080 // color-4294967040
+    oldColor = pixels[y * bitmapInfo->width + x];
 
     // Get red,green and blue values of the old color we like to change
     alpha = (int) ((color & 0xFF000000) >> 24);

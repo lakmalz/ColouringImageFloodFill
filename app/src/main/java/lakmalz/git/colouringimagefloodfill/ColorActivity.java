@@ -3,10 +3,7 @@ package lakmalz.git.colouringimagefloodfill;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.PointF;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -20,6 +17,7 @@ import butterknife.BindView;
 import butterknife.OnClick;
 
 public class ColorActivity extends BaseActivity {
+    private static final String TAG = "ColorActivity";
     @BindView(R.id.ivImage)
     TouchImageView ivImage;
 
@@ -48,7 +46,7 @@ public class ColorActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inScaled = false;
-        originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.four, o);
+        originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.one, o);
         ivImage.setImageBitmap(originalBitmap);
         currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
         constructor();
@@ -56,14 +54,17 @@ public class ColorActivity extends BaseActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_UP:
                         currentX = (int) event.getX();
                         currentY = (int) event.getY();
 
+                        //-------------------------
+                        //-------------------------
+                        float devVsImgRatio = ivImage.drawableWidthForDeviceRelated / originalBitmap.getWidth();
                         PointF point = ivImage.transformCoordTouchToBitmap(event.getX(), event.getY(), true);
-                        currentX = (int)point.x/4;
-                        currentY = (int)point.y/4;
-
+                        currentX = (int) (point.x / devVsImgRatio);
+                        currentY = (int) (point.y / devVsImgRatio);
+                        Log.d(TAG, "superMaxScale = " + (ivImage.superMaxScale));
                         floodFill(currentBitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
                         ivImage.setImageBitmap(currentBitmap);
                         break;
@@ -73,17 +74,7 @@ public class ColorActivity extends BaseActivity {
         });
     }
 
-    /*final float[] getPointerCoords(ImageView view, MotionEvent e)
-    {
-        final int index = e.getActionIndex();
-        float[] coords = new float[] { e.getX(index), e.getY(index) };
-        Matrix matrix = new Matrix();
-        view.getImageMatrix().invert(matrix);
-        matrix.postTranslate(view.getScrollX(), view.getScrollY());
-        matrix.mapPoints(coords);
 
-        return coords;
-    }*/
 
     @OnClick(R.id.btn_select_color)
     public void onClickTest() {
