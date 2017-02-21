@@ -148,12 +148,12 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_fl
     std::deque<uint32_t> pixelsLoopY = pixelsAllY;
     std::deque<uint32_t> queueLoopFillColor = queueFillColor;
     while (!pixelsLoopX.empty()) {
-        int cx = pixelsLoopX.front();
-        int cy = pixelsLoopY.front();
-        uint32_t cFillColor = queueLoopFillColor.front();
-        pixelsLoopX.pop_front();
-        pixelsLoopY.pop_front();
-        queueLoopFillColor.pop_front();
+        int cx = pixelsLoopX.back();
+        int cy = pixelsLoopY.back();
+        uint32_t cFillColor = queueLoopFillColor.back();
+        pixelsLoopX.pop_back();
+        pixelsLoopY.pop_back();
+        queueLoopFillColor.pop_back();
         floodFill(env, cx, cy, cFillColor, targetColor, bitmap, bitmapPixels, &bitmapInfo, tolerance);
     }
     AndroidBitmap_unlockPixels(env, bitmap);
@@ -182,6 +182,7 @@ bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance
     }
 }
 
+
 void floodFill(JNIEnv *env,
                uint32_t x,
                uint32_t y,
@@ -194,9 +195,6 @@ void floodFill(JNIEnv *env,
 
 
     // Used to hold the the start( touched ) color that we like to change/fill
-    if(color == targetColor)
-        return;
-
     int values[3] = {};
 
     if (x > bitmapInfo->width - 1)

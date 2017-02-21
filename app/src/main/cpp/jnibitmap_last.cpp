@@ -11,9 +11,9 @@
 
 #define DEBUG 0
 
-std::deque<uint32_t> pixelsAllX;
-std::deque<uint32_t> pixelsAllY;
-std::deque<uint32_t> queueFillColor;
+std::queue<uint32_t> pixelsAllX;
+std::queue<uint32_t> pixelsAllY;
+std::queue<uint32_t> queueFillColor;
 
 
 extern "C" {
@@ -34,7 +34,7 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_fl
                                                                                         uint32_t fillColor,
                                                                                         uint32_t targetColor,
                                                                                         uint32_t tolerance);
-void clear(std::deque<uint32_t> &q);
+void clear(std::queue<uint32_t> &q);
 
 bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance);
 
@@ -64,53 +64,87 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_re
                                                                                    uint32_t fillColor,
                                                                                    uint32_t targetColor,
                                                                                    uint32_t tolerance) {
-
-    AndroidBitmapInfo oldBitmapInfo;
+    //------------------------------------
+    AndroidBitmapInfo oldbitmapInfo;
 
     int ret;
-    if ((ret = AndroidBitmap_getInfo(env, bitmap, &oldBitmapInfo)) < 0) {
+    if ((ret = AndroidBitmap_getInfo(env, bitmap, &oldbitmapInfo)) < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
         return;
     }
 
-    if (oldBitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+    if (oldbitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
         LOGE("Bitmap format is not RGBA_8888!");
         return;
     }
 
-    void *oldBitmapPixels;
-    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &oldBitmapPixels)) < 0) {
+    void *oldbitmapPixels;
+    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &oldbitmapPixels)) < 0) {
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return;
     }
-    if (!pixelsAllX.empty()) {
-        int cx = pixelsAllX.back();
-        int cy = pixelsAllY.back();
-        uint32_t cFillColor = fillColor;//queueLoopFillColor.back();
-        floodFill(env, cx, cy, cFillColor, targetColor, bitmap, oldBitmapPixels, &oldBitmapInfo, tolerance);
 
-        pixelsAllX.pop_back();
-        pixelsAllY.pop_back();
-        queueFillColor.pop_back();
+    /*while (!pixelsAllX.empty()) {*/
+        int cx = pixelsAllX.front();
+        int cy = pixelsAllY.front();
+        uint32_t cFillColor = fillColor;//queueLoopFillColor.front();
+        //pixelsAllX.pop();
+        //pixelsAllY.pop();
+        //queueFillColor.pop();
+        floodFill(env, cx, cy, cFillColor, targetColor, bitmap, oldbitmapPixels, &oldbitmapInfo, tolerance);
+    /*}*/
+    AndroidBitmap_unlockPixels(env, bitmap);
+    //------------------------------------
+    //if(pixelsAllX.size() > 1) {
+
+    if (!pixelsAllX.empty()) {
+        pixelsAllX.pop();
+    }
+    if (!pixelsAllY.empty()) {
+        pixelsAllY.pop();
+    }
+    if (!queueFillColor.empty()) {
+        queueFillColor.pop();
     }
 
-    std::deque<uint32_t> pixelsLoopX = pixelsAllX;
-    std::deque<uint32_t> pixelsLoopY = pixelsAllY;
-    std::deque<uint32_t> queueLoopFillColor = queueFillColor;
+    //}
+
+    AndroidBitmapInfo bitmapInfo;
+
+    int rete;
+    if ((rete = AndroidBitmap_getInfo(env, bitmap, &bitmapInfo)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", rete);
+        return;
+    }
+
+    if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888!");
+        return;
+    }
+
+    void *bitmapPixels;
+    if ((rete = AndroidBitmap_lockPixels(env, bitmap, &bitmapPixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", rete);
+        return;
+    }
+
+    std::queue<uint32_t> pixelsLoopX = pixelsAllX;
+    std::queue<uint32_t> pixelsLoopY = pixelsAllY;
+    std::queue<uint32_t> queueLoopFillColor = queueFillColor;
     while (!pixelsLoopX.empty()) {
-        int cx = pixelsLoopX.back();
-        int cy = pixelsLoopY.back();
-        uint32_t cFillColor = queueLoopFillColor.back();
-        pixelsLoopX.pop_back();
-        pixelsLoopY.pop_back();
-        queueLoopFillColor.pop_back();
-        floodFill(env, cx, cy, cFillColor, targetColor, bitmap, oldBitmapPixels, &oldBitmapInfo, tolerance);
+        int cx = pixelsLoopX.front();
+        int cy = pixelsLoopY.front();
+        uint32_t cFillColor = /*fillColor;//*/queueLoopFillColor.front();
+        pixelsLoopX.pop();
+        pixelsLoopY.pop();
+        queueLoopFillColor.pop();
+        floodFill(env, cx, cy, cFillColor, targetColor, bitmap, bitmapPixels, &bitmapInfo, tolerance);
     }
     AndroidBitmap_unlockPixels(env, bitmap);
 }
 
-void clear(std::deque<uint32_t> &q) {
-    std::deque<uint32_t> empty;
+void clear(std::queue<uint32_t> &q) {
+    std::queue<uint32_t> empty;
     std::swap(q, empty);
 }
 
@@ -140,20 +174,20 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_fl
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return;
     }
-    pixelsAllX.push_back(x);
-    pixelsAllY.push_back(y);
-    queueFillColor.push_back(fillColor);
+    pixelsAllX.push(x);
+    pixelsAllY.push(y);
+    queueFillColor.push(fillColor);
 
-    std::deque<uint32_t> pixelsLoopX = pixelsAllX;
-    std::deque<uint32_t> pixelsLoopY = pixelsAllY;
-    std::deque<uint32_t> queueLoopFillColor = queueFillColor;
+    std::queue<uint32_t> pixelsLoopX = pixelsAllX;
+    std::queue<uint32_t> pixelsLoopY = pixelsAllY;
+    std::queue<uint32_t> queueLoopFillColor = queueFillColor;
     while (!pixelsLoopX.empty()) {
         int cx = pixelsLoopX.front();
         int cy = pixelsLoopY.front();
         uint32_t cFillColor = queueLoopFillColor.front();
-        pixelsLoopX.pop_front();
-        pixelsLoopY.pop_front();
-        queueLoopFillColor.pop_front();
+        pixelsLoopX.pop();
+        pixelsLoopY.pop();
+        queueLoopFillColor.pop();
         floodFill(env, cx, cy, cFillColor, targetColor, bitmap, bitmapPixels, &bitmapInfo, tolerance);
     }
     AndroidBitmap_unlockPixels(env, bitmap);
@@ -182,6 +216,7 @@ bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance
     }
 }
 
+
 void floodFill(JNIEnv *env,
                uint32_t x,
                uint32_t y,
@@ -194,9 +229,6 @@ void floodFill(JNIEnv *env,
 
 
     // Used to hold the the start( touched ) color that we like to change/fill
-    if(color == targetColor)
-        return;
-
     int values[3] = {};
 
     if (x > bitmapInfo->width - 1)

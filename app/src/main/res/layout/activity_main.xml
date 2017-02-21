@@ -12,12 +12,29 @@
         android:layout_weight="1"
         android:src="@drawable/one"/>
 
-    <Button
-        android:id="@+id/btn_select_color"
-        android:layout_gravity="center"
-        android:layout_width="216dp"
-        android:visibility="visible"
-        android:background="#b1f9b276"
-        android:text="Select color"
-        android:layout_height="48dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_select_color"
+            android:layout_gravity="center"
+            android:layout_width="216dp"
+            android:visibility="visible"
+            android:background="#b1f9b276"
+            android:text="Select color"
+            android:layout_height="48dp"/>
+        <Button
+            android:id="@+id/btn_redo"
+            android:layout_width="wrap_content"
+            android:text="Redo"
+            android:background="#b1f9492a"
+            android:layout_marginLeft="12dp"
+            android:layout_height="48dp"/>
+    </LinearLayout>
+
+
+
 </LinearLayout>

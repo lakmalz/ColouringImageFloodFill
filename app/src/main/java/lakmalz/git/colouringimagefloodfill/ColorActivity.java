@@ -25,16 +25,17 @@ public class ColorActivity extends BaseActivity {
     private Bitmap currentBitmap;
     private Bitmap originalBitmap;
     private int currentX, currentY, currentTolerance = 40;
+    private Bitmap oldBitmap;
 
     static {
         System.loadLibrary("jnibitmap");
     }
 
-    public native void constructor();
+    public native void constructor(/*Bitmap bitmap*/);
 
     public static native void floodFill(Bitmap bitmap, int x, int y, int fillColor, int targetColor, int tolerance);
 
-    public static native void redo();
+    public static native void redo(Bitmap bitmap, int fillColor, int targetColor, int tolerance);
 
     @Override
     protected int getLayoutId() {
@@ -49,7 +50,8 @@ public class ColorActivity extends BaseActivity {
         originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.one, o);
         ivImage.setImageBitmap(originalBitmap);
         currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-        constructor();
+        oldBitmap = originalBitmap;
+        constructor(/*currentBitmap*/);
         ivImage.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -58,22 +60,19 @@ public class ColorActivity extends BaseActivity {
                         currentX = (int) event.getX();
                         currentY = (int) event.getY();
 
-                        //-------------------------
-                        //-------------------------
                         float devVsImgRatio = ivImage.drawableWidthForDeviceRelated / originalBitmap.getWidth();
                         PointF point = ivImage.transformCoordTouchToBitmap(event.getX(), event.getY(), true);
                         currentX = (int) (point.x / devVsImgRatio);
                         currentY = (int) (point.y / devVsImgRatio);
-                        Log.d(TAG, "superMaxScale = " + (ivImage.superMaxScale));
-                        floodFill(currentBitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
-                        ivImage.setImageBitmap(currentBitmap);
+                        Bitmap bitmap = currentBitmap;
+                        floodFill(bitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
+                        ivImage.setImageBitmap(bitmap);
                         break;
                 }
                 return true;
             }
         });
     }
-
 
 
     @OnClick(R.id.btn_select_color)
@@ -85,7 +84,7 @@ public class ColorActivity extends BaseActivity {
         ColorPickerDialog dialog = ColorPickerDialog.newInstance(R.string.color_picker_default_title,
                 mColors,
                 mSelectedColor,
-                5, // Number of columns
+                5,
                 ColorPickerDialog.SIZE_SMALL);
 
         dialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
@@ -98,6 +97,13 @@ public class ColorActivity extends BaseActivity {
         });
 
         dialog.show(getFragmentManager(), "color_dialog_test");
+    }
+
+    @OnClick(R.id.btn_redo)
+    public void onClickRedo(View view) {
+        Bitmap bitmapo = currentBitmap;
+        redo(bitmapo,Color.WHITE ,Color.BLACK, 50);
+        ivImage.setImageBitmap(bitmapo);
     }
 
 }
