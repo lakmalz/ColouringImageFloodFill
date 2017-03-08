@@ -24,7 +24,7 @@ public class ColorActivity extends BaseActivity {
     private int mSelectedColor = Color.RED;
     private Bitmap currentBitmap;
     private Bitmap originalBitmap;
-    private int currentX, currentY, currentTolerance = 40;
+    private int currentX, currentY;
     private Bitmap oldBitmap;
 
     static {
@@ -77,7 +77,6 @@ public class ColorActivity extends BaseActivity {
 
     @OnClick(R.id.btn_select_color)
     public void onClickTest() {
-        //Toast.makeText(this, MainActivity.getTestString(), Toast.LENGTH_LONG).show();
         mSelectedColor = ContextCompat.getColor(this, R.color.flamingo);
         int[] mColors = getResources().getIntArray(R.array.default_rainbow);
 
