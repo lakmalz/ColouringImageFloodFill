@@ -18,24 +18,27 @@ import butterknife.OnClick;
 
 public class ColorActivity extends BaseActivity {
     private static final String TAG = "ColorActivity";
+
     @BindView(R.id.ivImage)
-    TouchImageView ivImage;
+    TouchImageView ivImagePaint;
 
     private int mSelectedColor = Color.RED;
     private Bitmap currentBitmap;
     private Bitmap originalBitmap;
     private int currentX, currentY;
     private Bitmap oldBitmap;
+    private ColourFill mColourFill;
+    private int tolarance = 190;
+/*
 
-    static {
-        System.loadLibrary("jnibitmap");
-    }
-
-    public native void constructor(/*Bitmap bitmap*/);
+    public native void constructor(*/
+/*Bitmap bitmap*//*
+);
 
     public static native void floodFill(Bitmap bitmap, int x, int y, int fillColor, int targetColor, int tolerance);
 
     public static native void redo(Bitmap bitmap, int fillColor, int targetColor, int tolerance);
+*/
 
     @Override
     protected int getLayoutId() {
@@ -45,14 +48,8 @@ public class ColorActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inScaled = false;
-        originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.one, o);
-        ivImage.setImageBitmap(originalBitmap);
-        currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
-        oldBitmap = originalBitmap;
-        constructor(/*currentBitmap*/);
-        ivImage.setOnTouchListener(new View.OnTouchListener() {
+        init();
+        ivImagePaint.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -60,18 +57,30 @@ public class ColorActivity extends BaseActivity {
                         currentX = (int) event.getX();
                         currentY = (int) event.getY();
 
-                        float devVsImgRatio = ivImage.drawableWidthForDeviceRelated / originalBitmap.getWidth();
-                        PointF point = ivImage.transformCoordTouchToBitmap(event.getX(), event.getY(), true);
+                        float devVsImgRatio = ivImagePaint.drawableWidthForDeviceRelated / originalBitmap.getWidth();
+                        PointF point = ivImagePaint.transformCoordTouchToBitmap(event.getX(), event.getY(), true);
                         currentX = (int) (point.x / devVsImgRatio);
                         currentY = (int) (point.y / devVsImgRatio);
                         Bitmap bitmap = currentBitmap;
-                        floodFill(bitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
-                        ivImage.setImageBitmap(bitmap);
+                        //floodFill(bitmap, currentX, currentY, mSelectedColor, Color.BLACK, 50);
+                        mColourFill.floodFill(bitmap, currentX, currentY, mSelectedColor, Color.BLACK, tolarance);
+                        ivImagePaint.setImageBitmap(bitmap);
                         break;
                 }
                 return true;
             }
         });
+    }
+
+    private void init() {
+        mColourFill = new ColourFill();
+        ivImagePaint.setMaxZoom(15);
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inScaled = false;
+        originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.one, o);
+        ivImagePaint.setImageBitmap(originalBitmap);
+        currentBitmap = originalBitmap.copy(originalBitmap.getConfig(), true);
+        oldBitmap = originalBitmap;
     }
 
 
@@ -101,8 +110,13 @@ public class ColorActivity extends BaseActivity {
     @OnClick(R.id.btn_redo)
     public void onClickRedo(View view) {
         Bitmap bitmapo = currentBitmap;
-        redo(bitmapo,Color.WHITE ,Color.BLACK, 50);
-        ivImage.setImageBitmap(bitmapo);
+        //redo(bitmapo,Color.WHITE ,Color.BLACK, 50);
+        mColourFill.redo(bitmapo, Color.WHITE, Color.BLACK, 0);
+        ivImagePaint.setImageBitmap(bitmapo);
     }
+/*
+    static {
+        System.loadLibrary("jnibitmap");
+    }*/
 
 }

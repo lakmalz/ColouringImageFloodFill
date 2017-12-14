@@ -19,7 +19,6 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -37,6 +36,7 @@ public class TouchImageView extends ImageView {
     private static final String DEBUG = "DEBUG";
     public static RectF stPointF;
     public static float drawableWidthForDeviceRelated = 0.0f;
+    public boolean isOnClick = false;
 
     //
     // SuperMin and SuperMax multipliers. Determine how much the image can be
@@ -279,13 +279,17 @@ public class TouchImageView extends ImageView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        onDrawReady = true;
-        imageRenderedAtLeastOnce = true;
-        if (delayedZoomVariables != null) {
-            setZoom(delayedZoomVariables.scale, delayedZoomVariables.focusX, delayedZoomVariables.focusY, delayedZoomVariables.scaleType);
-            delayedZoomVariables = null;
+        try {
+            onDrawReady = true;
+            imageRenderedAtLeastOnce = true;
+            if (delayedZoomVariables != null) {
+                setZoom(delayedZoomVariables.scale, delayedZoomVariables.focusX, delayedZoomVariables.focusY, delayedZoomVariables.scaleType);
+                delayedZoomVariables = null;
+            }
+            super.onDraw(canvas);
+        } catch (RuntimeException e) {
+
         }
-        super.onDraw(canvas);
     }
 
     @Override
@@ -830,6 +834,7 @@ public class TouchImageView extends ImageView {
         // Remember last point position for dragging
         //
         private PointF last = new PointF();
+        private List<State> stateList = new ArrayList<>();
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -837,6 +842,8 @@ public class TouchImageView extends ImageView {
             mGestureDetector.onTouchEvent(event);
             PointF curr = new PointF(event.getX(), event.getY());
             prvActionList.add(event.getAction());
+            stateList.add(state);
+            //Log.d(TAG, "onTouch: " + state);
             if (state == State.NONE || state == State.DRAG || state == State.FLING) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -859,15 +866,36 @@ public class TouchImageView extends ImageView {
                         break;
 
                     case MotionEvent.ACTION_UP:
-                        /*if (prvActionList.size() == 4 || prvActionList.size() == 3) {*/
-                            if (userTouchListener != null) {
-                                userTouchListener.onTouch(v, event);
+
+                        boolean isFling = false;
+                        boolean animateZoom = false;
+                        boolean zoom = false;
+                        for (State st : stateList) {
+                            if (st == State.FLING)
+                                isFling = true;
+                            if (st == State.ANIMATE_ZOOM)
+                                animateZoom = true;
+                            if (st == State.ZOOM)
+                                zoom = true;
+
+                        }
+
+                        if (!isFling) {
+                            if (!animateZoom) {
+                                if (!zoom) {
+
+                                    if (userTouchListener != null) {
+                                        userTouchListener.onTouch(v, event);
+                                    }
+                                }
                             }
-                        /*}*/
+                        }
+                        stateList.clear();
 
                         break;
                     case MotionEvent.ACTION_POINTER_UP:
                         setState(State.NONE);
+
                         break;
                 }
             }
@@ -1295,6 +1323,6 @@ public class TouchImageView extends ImageView {
     private void printMatrixInfo() {
         float[] n = new float[9];
         matrix.getValues(n);
-        Log.d(DEBUG, "Scale: " + n[Matrix.MSCALE_X] + " TransX: " + n[Matrix.MTRANS_X] + " TransY: " + n[Matrix.MTRANS_Y]);
+        //Log.d(DEBUG, "Scale: " + n[Matrix.MSCALE_X] + " TransX: " + n[Matrix.MTRANS_X] + " TransY: " + n[Matrix.MTRANS_Y]);
     }
 }
