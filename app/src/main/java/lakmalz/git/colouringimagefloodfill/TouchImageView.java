@@ -1,9 +1,5 @@
 package lakmalz.git.colouringimagefloodfill;
 
-/**
- * Created by lakmal on 8/29/16.
- */
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -18,6 +14,7 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -31,12 +28,17 @@ import android.widget.Scroller;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TouchImageView extends ImageView {
+/**
+ *
+ * Created by Lakmal Weerasekara
+ *
+ * @version 1.0
+ * @since 29 August 2016
+ */
+public class TouchImageView extends AppCompatImageView {
     private static final String TAG = "TouchImageView";
     private static final String DEBUG = "DEBUG";
-    public static RectF stPointF;
     public static float drawableWidthForDeviceRelated = 0.0f;
-    public boolean isOnClick = false;
 
     //
     // SuperMin and SuperMax multipliers. Determine how much the image can be
@@ -73,7 +75,7 @@ public class TouchImageView extends ImageView {
     private Context context;
     private Fling fling;
 
-    private ScaleType mScaleType;
+    private ImageView.ScaleType mScaleType;
 
     private boolean imageRenderedAtLeastOnce;
     private boolean onDrawReady;
@@ -93,7 +95,7 @@ public class TouchImageView extends ImageView {
     private ScaleGestureDetector mScaleDetector;
     private GestureDetector mGestureDetector;
     private GestureDetector.OnDoubleTapListener doubleTapListener = null;
-    private OnTouchListener userTouchListener = null;
+    private View.OnTouchListener userTouchListener = null;
     private OnTouchImageViewListener touchImageViewListener = null;
 
     public TouchImageView(Context context) {
@@ -121,21 +123,21 @@ public class TouchImageView extends ImageView {
         m = new float[9];
         normalizedScale = 1;
         if (mScaleType == null) {
-            mScaleType = ScaleType.FIT_CENTER;
+            mScaleType = ImageView.ScaleType.FIT_CENTER;
         }
         minScale = 1;
         maxScale = 3;
         superMinScale = SUPER_MIN_MULTIPLIER * minScale;
         superMaxScale = SUPER_MAX_MULTIPLIER * maxScale;
         setImageMatrix(matrix);
-        setScaleType(ScaleType.MATRIX);
+        setScaleType(ImageView.ScaleType.MATRIX);
         setState(State.NONE);
         onDrawReady = false;
         super.setOnTouchListener(new PrivateOnTouchListener());
     }
 
     @Override
-    public void setOnTouchListener(OnTouchListener l) {
+    public void setOnTouchListener(View.OnTouchListener l) {
         userTouchListener = l;
     }
 
@@ -176,12 +178,12 @@ public class TouchImageView extends ImageView {
     }
 
     @Override
-    public void setScaleType(ScaleType type) {
-        if (type == ScaleType.FIT_START || type == ScaleType.FIT_END) {
+    public void setScaleType(ImageView.ScaleType type) {
+        if (type == ImageView.ScaleType.FIT_START || type == ImageView.ScaleType.FIT_END) {
             throw new UnsupportedOperationException("TouchImageView does not support FIT_START or FIT_END");
         }
-        if (type == ScaleType.MATRIX) {
-            super.setScaleType(ScaleType.MATRIX);
+        if (type == ImageView.ScaleType.MATRIX) {
+            super.setScaleType(ImageView.ScaleType.MATRIX);
 
         } else {
             mScaleType = type;
@@ -196,7 +198,7 @@ public class TouchImageView extends ImageView {
     }
 
     @Override
-    public ScaleType getScaleType() {
+    public ImageView.ScaleType getScaleType() {
         return mScaleType;
     }
 
@@ -215,7 +217,7 @@ public class TouchImageView extends ImageView {
      * @return rect representing zoomed image
      */
     public RectF getZoomedRect() {
-        if (mScaleType == ScaleType.FIT_XY) {
+        if (mScaleType == ImageView.ScaleType.FIT_XY) {
             throw new UnsupportedOperationException("getZoomedRect() not supported with FIT_XY");
         }
         PointF topLeft = transformCoordTouchToBitmap(0, 0, true);
@@ -388,7 +390,7 @@ public class TouchImageView extends ImageView {
      * @param focusY
      * @param scaleType
      */
-    public void setZoom(float scale, float focusX, float focusY, ScaleType scaleType) {
+    public void setZoom(float scale, float focusX, float focusY, ImageView.ScaleType scaleType) {
         //
         // setZoom can be called before the image is on the screen, but at this point,
         // image and view sizes have not yet been calculated in onMeasure. Thus, we should
@@ -531,10 +533,10 @@ public class TouchImageView extends ImageView {
 
         int drawableWidth = drawable.getIntrinsicWidth();
         int drawableHeight = drawable.getIntrinsicHeight();
-        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int widthSize = View.MeasureSpec.getSize(widthMeasureSpec);
+        int widthMode = View.MeasureSpec.getMode(widthMeasureSpec);
+        int heightSize = View.MeasureSpec.getSize(heightMeasureSpec);
+        int heightMode = View.MeasureSpec.getMode(heightMeasureSpec);
         viewWidth = setViewSize(widthMode, widthSize, drawableWidth);
         viewHeight = setViewSize(heightMode, heightSize, drawableHeight);
 
@@ -674,15 +676,15 @@ public class TouchImageView extends ImageView {
     private int setViewSize(int mode, int size, int drawableWidth) {
         int viewSize;
         switch (mode) {
-            case MeasureSpec.EXACTLY:
+            case View.MeasureSpec.EXACTLY:
                 viewSize = size;
                 break;
 
-            case MeasureSpec.AT_MOST:
+            case View.MeasureSpec.AT_MOST:
                 viewSize = Math.min(drawableWidth, size);
                 break;
 
-            case MeasureSpec.UNSPECIFIED:
+            case View.MeasureSpec.UNSPECIFIED:
                 viewSize = drawableWidth;
                 break;
 
@@ -828,7 +830,7 @@ public class TouchImageView extends ImageView {
 
     List<Integer> prvActionList = new ArrayList();
 
-    private class PrivateOnTouchListener implements OnTouchListener {
+    private class PrivateOnTouchListener implements View.OnTouchListener {
 
         //
         // Remember last point position for dragging
@@ -1310,9 +1312,9 @@ public class TouchImageView extends ImageView {
         public float scale;
         public float focusX;
         public float focusY;
-        public ScaleType scaleType;
+        public ImageView.ScaleType scaleType;
 
-        public ZoomVariables(float scale, float focusX, float focusY, ScaleType scaleType) {
+        public ZoomVariables(float scale, float focusX, float focusY, ImageView.ScaleType scaleType) {
             this.scale = scale;
             this.focusX = focusX;
             this.focusY = focusY;

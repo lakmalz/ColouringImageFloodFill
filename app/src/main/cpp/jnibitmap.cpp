@@ -15,14 +15,23 @@ std::deque<uint32_t> pixelsAllX;
 std::deque<uint32_t> pixelsAllY;
 std::deque<uint32_t> queueFillColor;
 
+std::deque<uint32_t> pixelsAllX1;
+std::deque<uint32_t> pixelsAllY1;
+std::deque<uint32_t> queueFillColor1;
 
 extern "C" {
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_constructor(JNIEnv *env);
 
-JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env,
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_undo(JNIEnv *env,
                                                                                    jobject obj,
                                                                                    jobject bitmap,
                                                                                    uint32_t fillColor,
+                                                                                   uint32_t targetColor,
+                                                                                   uint32_t tolerance);
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env,
+                                                                                   jobject obj,
+                                                                                   jobject bitmap,
                                                                                    uint32_t targetColor,
                                                                                    uint32_t tolerance);
 
@@ -34,7 +43,19 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_fl
                                                                                         uint32_t fillColor,
                                                                                         uint32_t targetColor,
                                                                                         uint32_t tolerance);
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_clear(JNIEnv *env,
+                                                                                    jobject obj);
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_clearUndo(JNIEnv *env,
+                                                                                    jobject obj);
+
+JNIEXPORT int JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_getCount(JNIEnv *env,
+                                                                                    jobject obj,
+                                                                                    uint32_t action);
+
 void clear(std::deque<uint32_t> &q);
+
 
 bool isPixelValid(int currentColor, int oldColor, int *startColor, int tolerance);
 
@@ -51,14 +72,70 @@ void floodFill(JNIEnv *env,
 }
 
 //-----------------separator with method declaration----------------------------
-
-JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_constructor(JNIEnv *env) {
+void clearPixelVector(){
     clear(pixelsAllX);
     clear(pixelsAllY);
     clear(queueFillColor);
 }
 
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_constructor(JNIEnv *env) {
+    clearPixelVector();
+
+    clear(pixelsAllX1);
+    clear(pixelsAllY1);
+    clear(queueFillColor1);
+}
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_clear(JNIEnv *env,
+                                                                                   jobject obj) {
+    clearPixelVector();
+
+    clear(pixelsAllX1);
+    clear(pixelsAllY1);
+    clear(queueFillColor1);
+}
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_clearUndo(JNIEnv *env,
+                                                                                   jobject obj) {
+    clear(pixelsAllX1);
+    clear(pixelsAllY1);
+    clear(queueFillColor1);
+}
+
 JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_redo(JNIEnv *env,
+                                                                                   jobject obj,
+                                                                                   jobject bitmap,
+                                                                                   uint32_t targetColor,
+                                                                                   uint32_t tolerance) {
+
+    LOGE("pixelsAllY1 size: %ld", pixelsAllY1.size());
+    if (!pixelsAllY1.empty()) {
+
+        int cx = pixelsAllX1.back();
+        int cy = pixelsAllY1.back();
+        uint32_t cFillColor = queueFillColor1.back();
+
+        LOGE("%d, %d, %d", cx, cy, cFillColor);
+
+        Java_lakmalz_git_colouringimagefloodfill_ColorActivity_floodFill(env, obj, bitmap, cx, cy,
+                                                                         cFillColor, targetColor,
+                                                                         tolerance);
+        pixelsAllX1.pop_back();
+        pixelsAllY1.pop_back();
+        queueFillColor1.pop_back();
+    }
+}
+
+JNIEXPORT int JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_getCount(JNIEnv *env,
+                                                                                      jobject obj,
+                                                                                      uint32_t action){
+    if(action==1){
+        return pixelsAllX.size();
+    }
+    return pixelsAllX1.size();
+}
+
+JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_undo(JNIEnv *env,
                                                                                    jobject obj,
                                                                                    jobject bitmap,
                                                                                    uint32_t fillColor,
@@ -83,29 +160,42 @@ JNIEXPORT void JNICALL Java_lakmalz_git_colouringimagefloodfill_ColorActivity_re
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return;
     }
+    uint32_t cFillColor1;
     if (!pixelsAllX.empty()) {
         int cx = pixelsAllX.back();
         int cy = pixelsAllY.back();
         uint32_t cFillColor = fillColor;//queueLoopFillColor.back();
         floodFill(env, cx, cy, cFillColor, targetColor, bitmap, oldBitmapPixels, &oldBitmapInfo, tolerance);
 
+        std::deque<uint32_t> queueLoopFillColor = queueFillColor;
+        cFillColor1 =queueLoopFillColor.back();
+
         pixelsAllX.pop_back();
         pixelsAllY.pop_back();
         queueFillColor.pop_back();
+
+        LOGE("!pixelsAllX.empty() %d, %d, %d", cx, cy, cFillColor);
+
+        pixelsAllX1.push_back(cx);
+        pixelsAllY1.push_back(cy);
     }
 
     std::deque<uint32_t> pixelsLoopX = pixelsAllX;
     std::deque<uint32_t> pixelsLoopY = pixelsAllY;
     std::deque<uint32_t> queueLoopFillColor = queueFillColor;
     while (!pixelsLoopX.empty()) {
-        int cx = pixelsLoopX.back();
-        int cy = pixelsLoopY.back();
+        uint32_t cx = pixelsLoopX.back();
+        uint32_t cy = pixelsLoopY.back();
         uint32_t cFillColor = queueLoopFillColor.back();
+        cFillColor1 = cFillColor;
         pixelsLoopX.pop_back();
         pixelsLoopY.pop_back();
         queueLoopFillColor.pop_back();
         floodFill(env, cx, cy, cFillColor, targetColor, bitmap, oldBitmapPixels, &oldBitmapInfo, tolerance);
+        LOGE("while(!pixelsAllX.empty()) %d, %d, %d", cx, cy, cFillColor);
     }
+    queueFillColor1.push_back(cFillColor1);
+
     AndroidBitmap_unlockPixels(env, bitmap);
 }
 
@@ -192,7 +282,6 @@ void floodFill(JNIEnv *env,
                AndroidBitmapInfo *bitmapInfo,
                uint32_t tolerance) {
 
-
     // Used to hold the the start( touched ) color that we like to change/fill
     if(color == targetColor)
         return;
@@ -234,6 +323,10 @@ void floodFill(JNIEnv *env,
     green = green * alpha / 255;
     red = red * alpha / 255;
 
+    if(red<200 && red==blue && blue==green){
+        return;
+    }
+
     int tmp = 0;
     tmp = red;
     red = blue;
@@ -243,7 +336,7 @@ void floodFill(JNIEnv *env,
             ((green << 8) & 0x00FF00) |
             (red & 0x0000FF);
 
-    LOGD("edit1");
+    //LOGD("edit1");
     std::queue<uint32_t> pixelsX;
     std::queue<uint32_t> pixelsY;
 
